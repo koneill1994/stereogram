@@ -5,15 +5,13 @@ import Image
 import random
 import math
 
-dim = 1024 # length of a single image on a side
 
-height = dim
-width = 2*dim
-
+'''
 left_view  = [[(0,0,0) for x in range(dim)] for y in range(dim)]
 right_view = [[(0,0,0) for x in range(dim)] for y in range(dim)]
 
 points = []
+'''
 
 def list_average(l):
   s=0
@@ -50,15 +48,45 @@ def AddFocusCues(pos,col):
       return (255,0,0)
   return col
 
+def AddDisparityMap(disparity_map, depth_px):
+  for y in range(depth_map.size[1]): #height
+    for x in range(depth_map.size[0]): #width
+      z=int(list_average(depth_pixels[x,y])*depth/255)
+      #print z
+      if(x-z>0 and x+z<width):
+        disparity_map[y][(x-z)%width]-=z
+        disparity_map[y][(x+z)%width]+=z
+        
+  return disparity_map
+
+def display_disparity_map(disparity_map):
+  im = Image.new( 'RGB', (len(disparity_map),len(disparity_map[0])), "red")
+  px = im.load()
+  
+  for x in range(len(disparity_map)):
+    for y in range(len(disparity_map[0])):
+      v=(127+255*disparity_map[y][x]/depth)%255
+      px[x,y]=(v,v,v)
+  im.save('disparity_map.png')
+
 n_points=1000
-depth=20
+depth=100
 dot_size=5
 
-depth_map=Image.open("landscape.png")
+depth_map=Image.open("circle_gradient.png")
 depth_pixels=depth_map.load()
 
-background=Image.open("noise.png")
+background=Image.open("noise2.png")
 bg_px=background.load()
+
+dim = depth_map.size[0] # length of a single image on a side
+
+height = dim
+width = dim
+
+disparity_map = [[0 for x in range(dim)] for y in range(dim)]
+
+
 '''
 # generate points
 for i in range(0,n_points):
@@ -74,14 +102,16 @@ for p in points:
   right_view = AddPointsWithDisparity(1,p,right_view)
 '''
 
-
+'''
 for y in range(depth_map.size[1]): #height
   for x in range(depth_map.size[0]): #width
     z=int(list_average(depth_pixels[x,y])*depth)
     col=bg_px[x%background.size[0],y%background.size[1]]
     left_view[y][x]=bg_px[(x-z)%background.size[0],y%background.size[1]]
     right_view[y][x]=bg_px[(x+z)%background.size[0],y%background.size[1]]
+'''
 
+'''
 # draw image
 img = Image.new( 'RGB', (width,height), "red")
 pixels = img.load()
@@ -95,10 +125,21 @@ for y in range(height):
     pixels[x, y] = AddFocusCues((x,y),pixels[x,y])
 
 img.save("test.png")
+'''
 
 
+img = Image.new( 'RGB', (width,height), "red")
+pixels = img.load()
 
+disparity_map = AddDisparityMap(disparity_map, depth_pixels)
+display_disparity_map(disparity_map)
 
+#print disparity_map
 
+for y in range(depth_map.size[1]): #height
+  for x in range(depth_map.size[0]): #width
+    x_offset = disparity_map[y][x]
+    pixels[x, y] = bg_px[(x+x_offset)%background.size[0], y%background.size[1]]
 
+img.save("test.png")
 

@@ -11,7 +11,7 @@ def generate_noise(pixels):
       v = int(255*noise.pnoise2(.1*x,.1*y))
       pixels[x, y] = (v,v,v)
       
-  img.save('noise.png')
+  img.save('noise2.png')
   
 def generate_gradient(pixels):
   for y in range(dim):
@@ -37,8 +37,8 @@ def generate_grid(pixels):
   img.save("grid.png")
 
 
-dim = 256
+dim = 128
 
 img = Image.new( 'RGB', (dim,dim), "red")
 pixels = img.load()
-generate_grid(pixels)
+generate_noise(pixels)
